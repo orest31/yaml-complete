@@ -1,0 +1,14 @@
+aa:
+  - testA
+  - testAA
+  - testAAA
+bb:
+  aaa:
+      - x1
+      - y2
+  bbb:
+    - x1
+    - y65
+  abb: ls /home/orest
+cc:
+  - testC

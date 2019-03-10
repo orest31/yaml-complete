@@ -1,0 +1,9 @@
+[package]
+name = "yaml-complete"
+version = "0.1.0"
+authors = ["Orest <orest31@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+yaml-rust = "0.4"
+dirs = "1.0"
