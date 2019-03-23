@@ -1,5 +1,7 @@
 // usage `. <(yaml-complete <filename>)`
 
+extern crate dirs;
+
 use std::env;
 use std::fs::File;
 use std::io::{Error, ErrorKind};
@@ -9,8 +11,6 @@ use std::process::Command;
 
 use yaml_rust::yaml::Yaml;
 use yaml_rust::YamlLoader;
-
-extern crate dirs;
 
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -30,7 +30,6 @@ fn main() -> std::io::Result<()> {
                             MAIN_SEPARATOR,
                             args[1]);
 
-
     let mut file = File::open(file_path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
@@ -38,24 +37,22 @@ fn main() -> std::io::Result<()> {
 
     if arg_len == 2 {
         for item in cfg {
-            print_values(&item);
+            print_values(&item, &|_x| true);
         }
         return Ok(());
     }
 
     for item in &cfg {
-        let val: Option<&Yaml> = nested_value(item, &args[2..]);
-        if val.is_some() {
-            print_values(val.unwrap());
-        }
+        nested_value(item, &args[2..]);
     }
 
     Ok(())
 }
 
-fn nested_value<'a>(doc: &'a Yaml, args: &[String]) -> Option<&'a Yaml> {
+fn nested_value(doc: &Yaml, args: &[String]) {
     if args.len() == 0 {
-        return Some(doc);
+        print_values(doc, &|_x| true);
+        return;
     }
 
     match *doc {
@@ -67,28 +64,33 @@ fn nested_value<'a>(doc: &'a Yaml, args: &[String]) -> Option<&'a Yaml> {
                     return nested_value(val, &args[1..]);
                 }
             }
+            if args.len() == 1 {
+                print_values(doc, &|item| item.starts_with(arg));
+            }
         }
         Yaml::String(ref _v) => {
-            return Some(doc);
+            print_values(doc, &|_x| true);
         }
-        _ => {
-            return None;
-        }
+        _ => {}
     }
-
-    Some(doc)
 }
 
-fn print_values(doc: &Yaml) {
+fn print_values(doc: &Yaml, filter: &Fn(&str) -> bool) {
     match *doc {
         Yaml::Hash(ref h) => {
             for (k, _v) in h {
-                println!("{}", k.as_str().unwrap_or_else(|| ""))
+                let val: &str = k.as_str().unwrap();
+                if filter(val) {
+                    println!("{}", val)
+                }
             }
         }
         Yaml::Array(ref v) => {
             for list_item in v {
-                println!("{}", list_item.as_str().unwrap_or_else(|| ""))
+                let val: &str = list_item.as_str().unwrap();
+                if filter(val) {
+                    println!("{}", val);
+                }
             }
         }
         Yaml::String(ref v) => {
@@ -97,7 +99,7 @@ fn print_values(doc: &Yaml) {
                 .arg(v)
                 .output()
                 .expect("failed to execute process");
-            println!("{}", String::from_utf8_lossy(&output.stdout));
+            print!("{}", String::from_utf8_lossy(&output.stdout));
         }
         _ => {}
     }

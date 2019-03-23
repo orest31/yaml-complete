@@ -1,5 +1,7 @@
-_test_completion() {
-    COMPREPLY=($(/usr/bin/yaml-complete ${COMP_WORDS[@]}))
+#!/usr/bin/env bash
+
+_g_completion() {
+    COMPREPLY=($(/s/Dev/yaml-complete/target/debug/yaml-complete ${COMP_WORDS[@]}))
 }
 
-complete -F _test_completion test
+complete -F _g_completion g
